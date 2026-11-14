@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Regrid - スプライトシートを等間隔に整える</title>
+<link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+<header>
+  <h1>Regrid</h1>
+  <p class="sub">行・列は揃っているが間隔が不規則なスプライトシートを、等間隔のシートに整えます。画像はブラウザ内でのみ処理され、送信されません。</p>
+</header>
+
+<main>
+  <section id="drop" class="drop">
+    <label class="filebtn">画像を選ぶ<input id="file" type="file" accept="image/*" hidden></label>
+    <span>またはここにドラッグ＆ドロップ / 貼り付け(Ctrl+V)</span>
+  </section>
+
+  <section id="work" hidden>
+    <div class="toolbar">
+      <div class="group" role="group" aria-label="編集モード">
+        <button data-mode="move" class="active">線を動かす</button>
+        <button data-mode="addrow">横線を追加</button>
+        <button data-mode="addcol">縦線を追加</button>
+        <button data-mode="del">線を削除</button>
+      </div>
+      <label>ズーム <input id="zoom" type="range" min="1" max="12" value="3"> <output id="zoomv">3x</output></label>
+    </div>
+
+    <div class="stage"><canvas id="cv"></canvas></div>
+    <p id="status" class="status"></p>
+
+    <details open>
+      <summary>検出設定</summary>
+      <div class="grid2">
+        <label>隙間の感度 <output id="ratiov">2.0%</output>
+          <input id="ratio" type="range" min="0" max="10" step="0.5" value="2">
+        </label>
+        <label>ノイズ除去(最小幅px) <output id="minbv">3</output>
+          <input id="minb" type="range" min="1" max="12" value="3">
+        </label>
+        <label><input id="split" type="checkbox" checked> 癒着した行・列を自動で分割</label>
+        <label>アルファのしきい値 <output id="alphav">0</output>
+          <input id="alpha" type="range" min="0" max="254" value="0">
+        </label>
+      </div>
+      <button id="redetect">再検出(手動編集は破棄)</button>
+    </details>
+
+    <details open>
+      <summary>出力: 間隔を揃えたスプライトシート</summary>
+      <p class="hint">全フレームを同じサイズのセルに並べ直した、等間隔のシートPNGを書き出します。Godot の AnimatedSprite2D / Sprite2D(Hframes・Vframes)にそのまま使えます。</p>
+      <div class="grid2">
+        <label>フレームの基準位置
+          <select id="anchor">
+            <option value="bc">下・中央(キャラクター向け)</option>
+            <option value="c">中央</option>
+            <option value="tl">左上</option>
+          </select>
+        </label>
+        <label>セル内の余白 px <input id="pad" type="number" min="0" max="64" value="0"></label>
+        <label>ファイル名の接頭辞 <input id="prefix" type="text" value="sprite"></label>
+      </div>
+      <p id="sheetinfo" class="info"></p>
+      <div class="actions">
+        <button id="dlsheet" class="primary">整列したシートPNGを保存</button>
+        <button id="dljson">座標JSONを保存</button>
+      </div>
+    </details>
+
+    <details>
+      <summary>オプション: 1フレームずつ個別ファイルに分割して保存</summary>
+      <div class="grid2">
+        <label>分割の方式
+          <select id="outmode">
+            <option value="uniform">均等サイズの個別PNG(上の基準位置・余白を適用)</option>
+            <option value="trim">トリミングした個別PNG</option>
+            <option value="raw">線で区切った領域をそのまま個別PNG</option>
+          </select>
+        </label>
+        <label><input id="skipempty" type="checkbox" checked> 空セルは出力しない</label>
+      </div>
+      <div class="actions">
+        <button id="dlzip">個別PNGをZIPで保存</button>
+      </div>
+    </details>
+    <p class="tip">操作のコツ: 線は「線を動かす」でドラッグ。ズレた箇所だけ手で直せば完了です。</p>
+  </section>
+</main>
+
+<script src="src/detect.js"></script>
+<script src="src/zip.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>
