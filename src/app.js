@@ -1,7 +1,7 @@
 /* app.js - UI: 読込 / 自動検出 / グリッド線の編集 / 書き出し */
 (function () {
   'use strict';
-  const D = window.SheetDetect, Z = window.MiniZip;
+  const D = window.SheetDetect, Z = window.MiniZip, I = window.I18n, T = I.t;
   const $ = id => document.getElementById(id);
 
   const S = {
@@ -33,7 +33,7 @@
       setZoom(Math.max(1, Math.min(12, fit)));
       redetect();
     };
-    img.onerror = () => { $('status').textContent = '画像を読み込めませんでした。'; };
+    img.onerror = () => { $('status').textContent = T('loadError'); };
     img.src = url;
   }
 
@@ -94,10 +94,10 @@
     updateSheetInfo(cells);
     const empties = cells.filter(c => c.empty).length;
     $('status').textContent =
-      `${S.colLines.length - 1}列 × ${S.rowLines.length - 1}行 / 空セル ${empties} / ` +
-      `画像 ${S.W}×${S.H}px / 判定: ${S.mode === 'alpha' ? '透明度' : '背景色'}` +
-      (touching ? ` / ⚠ 線に接しているセル ${touching}(赤枠)` : '') +
-      (S.edited ? ' / 手動編集あり' : '');
+      T('status', { cols: S.colLines.length - 1, rows: S.rowLines.length - 1, empty: empties, w: S.W, h: S.H,
+                    mode: T(S.mode === 'alpha' ? 'modeAlpha' : 'modeBg') }) +
+      (touching ? T('statusCut', { n: touching }) : '') +
+      (S.edited ? T('statusEdited') : '');
   }
 
   // 出力シートのサイズとGodotでの設定値を表示する
@@ -105,9 +105,7 @@
     const pad = Math.max(0, +$('pad').value || 0);
     const u = uniformSize(cells, pad);
     const cols = S.colLines.length - 1, rows = S.rowLines.length - 1;
-    $('sheetinfo').textContent =
-      `出力シート ${cols * u.w}×${rows * u.h}px / 1セル ${u.w}×${u.h}px / ${cols}列×${rows}行` +
-      `  →  Godot: Hframes ${cols}, Vframes ${rows}`;
+    $('sheetinfo').textContent = T('sheetInfo', { sw: cols * u.w, sh: rows * u.h, cw: u.w, ch: u.h, cols, rows });
   }
 
   function drawLines(lines, horizontal, color) {
@@ -275,7 +273,7 @@
       name: `${o.prefix}_r${p2(cell.row)}_c${p2(cell.col)}.png`,
       data: await bytesOf(drawCell(src, cell, o, uni))
     })));
-    if (!files.length) { $('status').textContent = '出力できるセルがありません。'; return; }
+    if (!files.length) { $('status').textContent = T('noCells'); return; }
     download(Z.makeZip(files), `${o.prefix}_frames.zip`, 'application/zip');
   }
 
@@ -328,7 +326,7 @@
   ['ratio', 'minb', 'alpha', 'split'].forEach(id => $(id).addEventListener('input', () => {
     syncLabels();
     if (!S.edited) redetect();
-    else $('status').textContent = '手動編集があるため、設定を反映するには「再検出」を押してください。';
+    else $('status').textContent = T('editedNotice');
   }));
   $('redetect').addEventListener('click', () => { syncLabels(); redetect(); });
   $('pad').addEventListener('input', () => { if (S.rgba) render(); });
@@ -336,6 +334,11 @@
   $('dlsheet').addEventListener('click', exportSheet);
   $('dljson').addEventListener('click', exportJson);
   syncLabels();
+
+  // 言語の切り替え(既定は英語)
+  I.init();
+  $('lang').addEventListener('click', () => I.setLang(I.getLang() === 'en' ? 'ja' : 'en'));
+  I.onChange(() => { if (S.rgba) render(); });
 
   // テスト/デバッグ用に最小限のフックを公開
   window.__app = { S, loadFile, redetect, exportZip };

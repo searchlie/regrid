@@ -1,95 +1,99 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Regrid - スプライトシートを等間隔に整える</title>
+<title>Regrid - turn an irregular sprite sheet into an evenly spaced one</title>
 <link rel="stylesheet" href="src/style.css">
 </head>
 <body>
 <header>
-  <h1>Regrid</h1>
-  <p class="sub">行・列は揃っているが間隔が不規則なスプライトシートを、等間隔のシートに整えます。画像はブラウザ内でのみ処理され、送信されません。</p>
+  <div class="head">
+    <h1>Regrid</h1>
+    <button id="lang" type="button" aria-label="Language" data-i18n="langBtn">日本語</button>
+  </div>
+  <p class="sub" data-i18n="subtitle">Rows and columns are aligned but the spacing is irregular? Regrid detects the grid and rebuilds the sheet with evenly sized cells. Your image is processed in the browser and never uploaded.</p>
 </header>
 
 <main>
   <section id="drop" class="drop">
-    <label class="filebtn">画像を選ぶ<input id="file" type="file" accept="image/*" hidden></label>
-    <span>またはここにドラッグ＆ドロップ / 貼り付け(Ctrl+V)</span>
+    <label class="filebtn"><span data-i18n="pickBtn">Choose image</span><input id="file" type="file" accept="image/*" hidden></label>
+    <span data-i18n="dropHint">or drag &amp; drop / paste (Ctrl+V)</span>
   </section>
 
   <section id="work" hidden>
     <div class="toolbar">
-      <div class="group" role="group" aria-label="編集モード">
-        <button data-mode="move" class="active">線を動かす</button>
-        <button data-mode="addrow">横線を追加</button>
-        <button data-mode="addcol">縦線を追加</button>
-        <button data-mode="del">線を削除</button>
+      <div class="group" role="group" aria-label="Edit mode">
+        <button data-mode="move" class="active" data-i18n="modeMove">Move lines</button>
+        <button data-mode="addrow" data-i18n="modeAddRow">Add row line</button>
+        <button data-mode="addcol" data-i18n="modeAddCol">Add column line</button>
+        <button data-mode="del" data-i18n="modeDel">Delete line</button>
       </div>
-      <label>ズーム <input id="zoom" type="range" min="1" max="12" value="3"> <output id="zoomv">3x</output></label>
+      <label><span data-i18n="zoom">Zoom</span> <input id="zoom" type="range" min="1" max="12" value="3"> <output id="zoomv">3x</output></label>
     </div>
 
     <div class="stage"><canvas id="cv"></canvas></div>
     <p id="status" class="status"></p>
 
     <details open>
-      <summary>検出設定</summary>
+      <summary data-i18n="detectSummary">Detection settings</summary>
       <div class="grid2">
-        <label>隙間の感度 <output id="ratiov">2.0%</output>
+        <label><span><span data-i18n="sensitivity">Gap sensitivity</span> <output id="ratiov">2.0%</output></span>
           <input id="ratio" type="range" min="0" max="10" step="0.5" value="2">
         </label>
-        <label>ノイズ除去(最小幅px) <output id="minbv">3</output>
+        <label><span><span data-i18n="minBand">Noise filter (min width, px)</span> <output id="minbv">3</output></span>
           <input id="minb" type="range" min="1" max="12" value="3">
         </label>
-        <label><input id="split" type="checkbox" checked> 癒着した行・列を自動で分割</label>
-        <label>アルファのしきい値 <output id="alphav">0</output>
+        <label><input id="split" type="checkbox" checked> <span data-i18n="split">Auto-split rows/columns that touch</span></label>
+        <label><span><span data-i18n="alphaThr">Alpha threshold</span> <output id="alphav">0</output></span>
           <input id="alpha" type="range" min="0" max="254" value="0">
         </label>
       </div>
-      <button id="redetect">再検出(手動編集は破棄)</button>
+      <button id="redetect" data-i18n="redetect">Re-detect (discards manual edits)</button>
     </details>
 
     <details open>
-      <summary>出力: 間隔を揃えたスプライトシート</summary>
-      <p class="hint">全フレームを同じサイズのセルに並べ直した、等間隔のシートPNGを書き出します。Godot の AnimatedSprite2D / Sprite2D(Hframes・Vframes)にそのまま使えます。</p>
+      <summary data-i18n="outSummary">Output: evenly spaced sprite sheet</summary>
+      <p class="hint" data-i18n="outHint">Rebuilds the sheet so every frame sits in a cell of the same size. Ready to use in Godot (Hframes / Vframes) or any engine that slices by a fixed grid.</p>
       <div class="grid2">
-        <label>フレームの基準位置
+        <label><span data-i18n="anchor">Frame anchor</span>
           <select id="anchor">
-            <option value="bc">下・中央(キャラクター向け)</option>
-            <option value="c">中央</option>
-            <option value="tl">左上</option>
+            <option value="bc" data-i18n="anchorBC">Bottom center (characters)</option>
+            <option value="c" data-i18n="anchorC">Center</option>
+            <option value="tl" data-i18n="anchorTL">Top left</option>
           </select>
         </label>
-        <label>セル内の余白 px <input id="pad" type="number" min="0" max="64" value="0"></label>
-        <label>ファイル名の接頭辞 <input id="prefix" type="text" value="sprite"></label>
+        <label><span data-i18n="pad">Cell padding (px)</span> <input id="pad" type="number" min="0" max="64" value="0"></label>
+        <label><span data-i18n="prefix">File name prefix</span> <input id="prefix" type="text" value="sprite"></label>
       </div>
       <p id="sheetinfo" class="info"></p>
       <div class="actions">
-        <button id="dlsheet" class="primary">整列したシートPNGを保存</button>
-        <button id="dljson">座標JSONを保存</button>
+        <button id="dlsheet" class="primary" data-i18n="saveSheet">Save aligned sheet (PNG)</button>
+        <button id="dljson" data-i18n="saveJson">Save coordinates (JSON)</button>
       </div>
     </details>
 
     <details>
-      <summary>オプション: 1フレームずつ個別ファイルに分割して保存</summary>
+      <summary data-i18n="optSummary">Option: save each frame as a separate file</summary>
       <div class="grid2">
-        <label>分割の方式
+        <label><span data-i18n="optMode">Split mode</span>
           <select id="outmode">
-            <option value="uniform">均等サイズの個別PNG(上の基準位置・余白を適用)</option>
-            <option value="trim">トリミングした個別PNG</option>
-            <option value="raw">線で区切った領域をそのまま個別PNG</option>
+            <option value="uniform" data-i18n="optUniform">Uniform-size PNGs (uses the anchor and padding above)</option>
+            <option value="trim" data-i18n="optTrim">Trimmed PNGs</option>
+            <option value="raw" data-i18n="optRaw">Raw regions between the grid lines</option>
           </select>
         </label>
-        <label><input id="skipempty" type="checkbox" checked> 空セルは出力しない</label>
+        <label><input id="skipempty" type="checkbox" checked> <span data-i18n="skipEmpty">Skip empty cells</span></label>
       </div>
       <div class="actions">
-        <button id="dlzip">個別PNGをZIPで保存</button>
+        <button id="dlzip" data-i18n="saveZip">Save frames as ZIP</button>
       </div>
     </details>
-    <p class="tip">操作のコツ: 線は「線を動かす」でドラッグ。ズレた箇所だけ手で直せば完了です。</p>
+    <p class="tip" data-i18n="tip">Tip: drag lines with "Move lines" and fix only the ones that are off. Cells outlined in red may be cut by a line.</p>
   </section>
 </main>
 
+<script src="src/i18n.js"></script>
 <script src="src/detect.js"></script>
 <script src="src/zip.js"></script>
 <script src="src/app.js"></script>

@@ -1,47 +1,51 @@
 # Regrid
 
-行・列は揃っているが **間隔が不規則** なスプライトシートを、ブラウザ上で **等間隔のシートに引き直す(regrid)** ツールです。
-Godot の Auto Slice(透明部分で矩形を探す方式)がうまく動かない素材向けです。
+**English** | [日本語](README.ja.md)
 
-- インストール不要。静的ファイルだけで動きます(GitHub Pages 向け)
-- 画像はブラウザ内でのみ処理され、どこにも送信されません
-- 検出結果のグリッド線は、ドラッグで手直しできます
+Regrid rebuilds a sprite sheet as an **evenly spaced grid**. It is made for sheets whose rows and columns are aligned but whose spacing is irregular, where Godot's Auto Slice (which looks for rectangles separated by transparent pixels) does not work well.
 
-## 使い方
+**Demo: https://searchlie.github.io/regrid/** (use the button at the top right to switch the UI to Japanese)
 
-1. `index.html` を開き、画像を選択(ドラッグ＆ドロップ、貼り付けも可)
-2. 自動で行・列の境界線が引かれます。ズレた線だけドラッグして直します
-   - 赤枠のセルは「スプライトが線で切れている可能性がある」セルです
-3. 「整列したシートPNGを保存」で、全フレームを同じサイズのセルに並べ直した等間隔のシートを書き出します(既定)
-   - Godot では Hframes / Vframes にそのまま使えます(画面に表示される列数・行数を入力)
-   - フレームの基準位置(下・中央 / 中央 / 左上)とセル内の余白を指定できます
-4. オプションとして、1フレームずつの個別PNG(ZIP)や、座標JSONも保存できます
+- No install. It is a static page, so it runs from GitHub Pages or straight from `index.html`
+- Your image is processed in the browser and never uploaded
+- The detected grid lines can be adjusted by dragging
 
-## 検出の仕組み(射影プロファイル法)
+## How to use
 
-1. 透明度(不透明画像なら背景色との差)から前景マスクを作る
-2. 行ごと・列ごとに前景ピクセル数を数え、プロファイルを作る
-3. プロファイルが「最大値の一定割合(既定 2%)以下」の区間を隙間とし、残りをバンド(行・列)とする
-4. 隣り合うバンドの隙間の中央に境界線を引く
-5. 中央値より大きく太ったバンド(行が癒着している場合)は、プロファイルの谷で分割する
+1. Open the page and choose an image (drag & drop and paste also work).
+2. Row and column boundary lines are drawn automatically. Drag only the lines that are off.
+   - Cells outlined in red may be cut by a line.
+3. Press **Save aligned sheet (PNG)** to export a sheet where every frame sits in a cell of the same size (default).
+   - Use the Hframes / Vframes values shown on the page in Godot.
+   - You can choose the frame anchor (bottom center / center / top left) and the cell padding.
+4. Optionally, save each frame as a separate PNG (ZIP) or export the coordinates as JSON.
 
-隙間を「0」ではなく「割合」で判定するので、一部のタイルだけが隣と接していても行を分けられます。
+## How detection works (projection profiles)
 
-## ファイル構成
+1. Build a foreground mask from transparency (or from the difference to the background color for opaque images).
+2. Count foreground pixels per row and per column to get two profiles.
+3. A stretch where the profile is at or below a fraction of its maximum (2% by default) is a gap. The rest are bands (rows / columns).
+4. Draw a boundary line in the middle of each gap.
+5. A band much larger than the median (rows or columns that touch) is split at the valley of the profile.
 
-| パス | 内容 |
+Because a gap is defined by a *fraction* rather than by zero, rows can still be separated when only a few tiles touch their neighbors.
+
+## Files
+
+| Path | Description |
 | --- | --- |
-| `index.html`, `src/style.css` | 画面 |
-| `src/detect.js` | 検出ロジック(ブラウザ/Node 両対応の純粋関数) |
-| `src/app.js` | 画面操作と書き出し |
-| `src/zip.js` | 依存なしの最小ZIPライタ |
-| `tests/detect.test.js` | 合成画像による検出テスト(`node tests/detect.test.js`) |
+| `index.html`, `src/style.css` | The page |
+| `src/detect.js` | Detection logic (pure functions, works in the browser and in Node) |
+| `src/app.js` | UI and export |
+| `src/i18n.js` | UI strings (English / Japanese, English by default) |
+| `src/zip.js` | Minimal dependency-free ZIP writer |
+| `tests/detect.test.js` | Detection tests on synthetic images (`node tests/detect.test.js`) |
 
-## 公開(GitHub Pages)
+## Publishing (GitHub Pages)
 
 Settings → Pages → Build and deployment → Source: **Deploy from a branch** → Branch: `main` / `/ (root)`
 
-## 既知の制限
+## Limitations
 
-- 行・列がそれぞれ揃っていることが前提です(斜めや回転したレイアウトは対象外)
-- 巨大な画像(数千px四方)は、ブラウザのメモリ制限により重くなる場合があります
+- Rows and columns must each be aligned (diagonal or rotated layouts are not supported).
+- Very large images (thousands of pixels per side) may be slow because of browser memory limits.

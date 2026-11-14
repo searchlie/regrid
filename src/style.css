@@ -25,3 +25,4 @@ input[type=text],input[type=number],select{background:#0f1115;color:var(--fg);bo
 .tip{color:var(--mut);font-size:12px}
 .hint{color:var(--mut);font-size:13px;margin:6px 0}
 .info{font-size:13px;margin:6px 0;padding:8px 10px;background:#0f1115;border:1px solid var(--line);border-radius:8px;font-variant-numeric:tabular-nums}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px}
